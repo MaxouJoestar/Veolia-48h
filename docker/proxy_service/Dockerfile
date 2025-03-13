@@ -1,4 +1,4 @@
-FROM debian:12.9
+FROM debian:12.9-stable
 
 # Installer Squid Proxy et les outils nécessaires
 RUN apt update && apt install -y squid apache2-utils curl
