@@ -12,6 +12,7 @@ Ce projet permet de déployer rapidement un ensemble de services Docker (NTP, lo
 
 1. Clonez ce dépôt sur la machine A :
    `git clone https://github.com/votre-utilisateur/votre-repository.git`
+   
    `cd votre-repository`
    
 Exécutez le script de déploiement :
