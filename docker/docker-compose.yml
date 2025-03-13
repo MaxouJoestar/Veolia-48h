@@ -1,0 +1,67 @@
+version: "3.9"
+
+networks:
+  infra_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.0.0/24"
+
+services:
+  ntp_service:
+    image: cturra/ntp:latest  # Image NTP basée sur Alpine Linux
+    container_name: ntp_service
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: 10.0.0.10
+    ports:
+      - "123:123/udp"
+
+  log_service:
+    image: syslog-ng:latest  # Image officielle de syslog-ng
+    container_name: log_service
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: 10.0.0.20
+    ports:
+      - "514:514/udp"
+      - "8514:8514"
+
+  compliance_agent:
+    build: ./compliance_agent  # Pas d'image officielle disponible, utilisation de l'image personnalisée
+    container_name: compliance_agent
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: 10.0.0.30
+
+  proxy_service:
+    image: ubuntu/squid:latest  # Image officielle de Squid Proxy basée sur Ubuntu
+    container_name: proxy_service
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: 10.0.0.40
+    ports:
+      - "8080:8080"
+      - "8530:8530"
+      - "53:53/udp"
+
+  grafana:
+    image: grafana/grafana:latest  # Image officielle de Grafana
+    container_name: grafana
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: 10.0.0.50
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  grafana_data:
