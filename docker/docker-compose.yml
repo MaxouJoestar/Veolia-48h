@@ -1,24 +1,27 @@
+# Configuration du réseau pour tous les services
 networks:
   infra_net:
-    driver: bridge
-    ipam:
+    driver: bridge    # Utilisation du driver bridge standard de Docker
+    ipam:            # Configuration IP Address Management
       config:
-        - subnet: "10.0.0.0/24"
-          gateway: "10.0.0.1"
+        - subnet: "10.0.0.0/24"    # Définition du sous-réseau
+          gateway: "10.0.0.1"      # Passerelle par défaut
 
 services:
+  # Service NTP - Synchronisation du temps
   ntp_service:
     build:
       context: ./ntp
       dockerfile: Dockerfile
     container_name: ntp_service
-    restart: always
+    restart: always    # Redémarrage automatique en cas de crash
     networks:
       infra_net:
-        ipv4_address: "10.0.0.10"
+        ipv4_address: "10.0.0.10"    # IP fixe pour le service NTP
     ports:
-      - "123:123/udp"
+      - "123:123/udp"    # Port standard NTP
 
+  # Service de logs - Centralisation des logs
   log_service:
     build:
       context: ./log_service
@@ -27,11 +30,12 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.20"
+        ipv4_address: "10.0.0.20"    # IP fixe pour le service de logs
     ports:
-      - "514:514/udp"
-      - "8514:8514"
+      - "514:514/udp"    # Port Syslog standard
+      - "8514:8514"      # Port HTTP pour l'interface web
 
+  # Agent de conformité - Surveillance et reporting
   compliance_agent:
     build:
       context: ./compliance_agent
@@ -40,8 +44,9 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.30"
+        ipv4_address: "10.0.0.30"    # IP fixe pour l'agent
 
+  # Service Proxy - Gestion du trafic et DNS
   proxy_service:
     build:
       context: ./proxy_service
@@ -50,25 +55,27 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.40"
+        ipv4_address: "10.0.0.40"    # IP fixe pour le proxy
     ports:
-      - "8080:8080"
-      - "8530:8530"
-      - "53:53/udp"
+      - "8080:8080"     # Port HTTP proxy
+      - "8530:8530"     # Port pour services additionnels
+      - "53:53/udp"     # Port DNS
 
+  # Grafana - Visualisation et monitoring
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:latest    # Utilisation de l'image officielle
     container_name: grafana
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.50"
+        ipv4_address: "10.0.0.50"    # IP fixe pour Grafana
     ports:
-      - "3000:3000"
+      - "3000:3000"    # Interface web Grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin    # Mot de passe par défaut (à changer en production)
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana    # Persistance des données
 
+# Définition des volumes pour la persistance des données
 volumes:
-  grafana_data:
+  grafana_data:    # Volume pour stocker les données Grafana
