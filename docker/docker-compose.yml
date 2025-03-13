@@ -1,3 +1,5 @@
+version: "3.9"
+
 networks:
   infra_net:
     driver: bridge
@@ -7,7 +9,7 @@ networks:
 
 services:
   ntp_service:
-    build: ./ntp
+    image: cturra/ntp:latest  # Image NTP basée sur Alpine Linux
     container_name: ntp_service
     restart: always
     networks:
@@ -17,7 +19,7 @@ services:
       - "123:123/udp"
 
   log_service:
-    build: ./log_service
+    image: syslog-ng:latest  # Image officielle de syslog-ng
     container_name: log_service
     restart: always
     networks:
@@ -28,7 +30,7 @@ services:
       - "8514:8514"
 
   compliance_agent:
-    build: ./compliance_agent
+    build: ./compliance_agent  # Pas d'image officielle disponible, utilisation de l'image personnalisée
     container_name: compliance_agent
     restart: always
     networks:
@@ -36,7 +38,7 @@ services:
         ipv4_address: 10.0.0.30
 
   proxy_service:
-    build: ./proxy_service
+    image: ubuntu/squid:latest  # Image officielle de Squid Proxy basée sur Ubuntu
     container_name: proxy_service
     restart: always
     networks:
@@ -48,7 +50,7 @@ services:
       - "53:53/udp"
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:latest  # Image officielle de Grafana
     container_name: grafana
     restart: always
     networks:
