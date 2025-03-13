@@ -1,13 +1,9 @@
-version: "3.9"
-
 networks:
   infra_net:
     driver: bridge
     ipam:
-      driver: default
       config:
-        - subnet: "10.0.0.0/24"  # Plage d'adresses IP pour votre réseau Docker
-        - gateway: "10.0.0.1"     # Passerelle par défaut du réseau
+        - subnet: "10.0.0.0/24"
 
 services:
   ntp_service:
@@ -16,7 +12,7 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.10"  # Adresse IP statique
+        ipv4_address: 10.0.0.10
     ports:
       - "123:123/udp"
 
@@ -26,7 +22,7 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.20"  # Adresse IP statique
+        ipv4_address: 10.0.0.20
     ports:
       - "514:514/udp"
       - "8514:8514"
@@ -37,7 +33,7 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.30"  # Adresse IP statique
+        ipv4_address: 10.0.0.30
 
   proxy_service:
     build: ./proxy_service
@@ -45,7 +41,7 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.40"  # Adresse IP statique
+        ipv4_address: 10.0.0.40
     ports:
       - "8080:8080"
       - "8530:8530"
@@ -57,13 +53,13 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.50"  # Adresse IP statique
+        ipv4_address: 10.0.0.50
     ports:
-      - "3000:3000"  # Accès à l'interface Web de Grafana
+      - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin  # Définir le mot de passe admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - grafana_data:/var/lib/grafana  # Persistance des données
+      - grafana_data:/var/lib/grafana
 
 volumes:
-  grafana_data:  # Volume Docker pour la persistance des données
+  grafana_data:
