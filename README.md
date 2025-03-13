@@ -11,24 +11,22 @@ Ce projet permet de déployer rapidement un ensemble de services Docker (NTP, lo
 ## Utilisation
 
 1. Clonez ce dépôt sur la machine A :
-   git clone https://github.com/votre-utilisateur/votre-repository.git
-   cd votre-repository
+   `git clone https://github.com/votre-utilisateur/votre-repository.git
+   cd votre-repository`
    
 Exécutez le script de déploiement :
+`./deploy.sh`
 
-./deploy.sh
 Le script vous demandera l'adresse IP de la machine B (par exemple, 10.0.0.2).
 
 Vérifiez que les conteneurs Docker sont en cours d'exécution :
+`ssh -p 2222 user@10.0.0.2 docker ps`
 
-ssh -p 2222 user@10.0.0.2 docker ps
 Configuration SSH
 Le script configure SSH pour :
 
-Écouter sur le port 2222.
-
-Désactiver l'authentification par mot de passe (seules les clés SSH sont autorisées).
+- Écouter sur le port 2222.
+- Désactiver l'authentification par mot de passe (seules les clés SSH sont autorisées).
 
 Pour vous connecter à la machine B après le déploiement :
-
-ssh -p 2222 user@10.0.0.2
+`ssh -p 2222 user@10.0.0.2`
