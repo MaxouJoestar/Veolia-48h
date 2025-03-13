@@ -22,4 +22,8 @@ EOF
 )
 
 # Envoi des données au serveur OCI
-curl -X POST -H "Content-Type: application/json" -d "$JSON_DATA" "https://10.0.5.42:443/api/compliance"
+if curl -X POST -H "Content-Type: application/json" -d "$JSON_DATA" "https://10.0.5.42:443/api/compliance"; then
+  echo "Données envoyées avec succès."
+else
+  echo "Échec de l'envoi des données."
+fi
