@@ -11,17 +11,15 @@ services:
     build:
       context: ./log_service
       dockerfile: Dockerfile
-    container_name: log_service
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.20"
     ports:
-      - "514:514/udp"           # Port d'écoute pour les journaux Syslog
-      - "8514:8514"             # Port pour l'interface de visualisation
+      - "515:514/udp"   # Gardez ce port, il est nécessaire pour Syslog
+      - "8514:8514"     # Gardez ce port pour l'accès spécifique
     volumes:
       - ./logs/syslog.log:/var/log/syslog.log
-      - ./log_service/certs:/etc/rsyslog/certs  # Certificats TLS
+      - ./log_service/certs:/etc/rsyslog/certs
     environment:
       SOC_IP_1: "10.0.0.80"
       SOC_IP_2: "10.0.1.82"
@@ -29,11 +27,11 @@ services:
 
   loki:
     image: grafana/loki:latest
-    container_name: loki
+    deploy:
+      replicas: 2
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.60"
     ports:
       - "3100:3100"
     volumes:
@@ -43,11 +41,11 @@ services:
 
   promtail:
     image: grafana/promtail:latest
-    container_name: promtail
+    deploy:
+      replicas: 2
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.70"
     volumes:
       - ./logs:/var/log
       - ./loki/promtail-config.yaml:/etc/promtail/config.yml
@@ -55,19 +53,28 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    deploy:
+      replicas: 2
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.50"
     ports:
-      - "3000:3000"             # Port interne de Grafana
-      - "8514:3000"             # Exposition sur le port 8514 du VCH
+      - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_INSTALL_PLUGINS: grafana-loki-datasource
     volumes:
       - grafana_data:/var/lib/grafana
+
+  haproxy:
+    image: haproxy:latest
+    restart: always
+    networks:
+      infra_net:
+    ports:
+      - "8080:80"  # Conserver uniquement ce port pour l'accès web
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
 
 volumes:
   grafana_data:
