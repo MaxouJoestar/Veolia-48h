@@ -1,34 +1,32 @@
 # VEOLIA-VCH
 
-Ce projet permet de déployer rapidement un ensemble de services Docker (NTP, logs, compliance, proxy, et optionnellement Grafana) sur une machine distante sous Debian 12.9.0.
+# Veolia-48h Docker Setup
+
+Ce projet configure et déploie une infrastructure basée sur Docker pour surveiller et centraliser les logs à l'aide de **Loki**, **Promtail**, **Grafana**, et **HAProxy**. 
 
 ## Prérequis
 
-- Une machine A (machine de contrôle) avec accès SSH à la machine B (machine cible).
-- La machine B doit être sous Debian 12.9.0 et avoir une adresse IP dans le réseau `10.0.0.0/24`.
-- Un utilisateur avec des privilèges `sudo` sur la machine B.
+- Docker et Docker Compose installés sur votre machine
+- Clé SSH configurée pour une connexion sécurisée (mot de passe désactivé)
 
-## Utilisation
+## Installation
 
-1. Clonez ce dépôt sur la machine A :
+1. **Cloner le dépôt :**
+`git clone https://github.com/MaxouJoestar/Veolia-48h.git`
 
-   `git clone https://github.com/votre-utilisateur/votre-repository.git`
-   
-   `cd votre-repository`
-   
-Exécutez le script de déploiement :
-`./deploy.sh`
+2. **Se rendre dans le dossier docker :**
+`cd Veolia-48h/docker`
 
-Le script vous demandera l'adresse IP de la machine B (par exemple, 10.0.0.2).
+4. **Construire et démarrer les conteneurs Docker :**
+`docker-compose build`
+`docker-compose up -d`
 
-Vérifiez que les conteneurs Docker sont en cours d'exécution :
-`ssh -p 2222 user@10.0.0.2 docker ps`
+5. **Configuration SSH**
+Le port SSH est configuré dynamiquement en fonction du département (22<numero_departement>).
+L'authentification par mot de passe est désactivée, et seule l'authentification par clé SSH est autorisée.
 
-Configuration SSH
-Le script configure SSH pour :
-
-- Écouter sur le port 2222.
-- Désactiver l'authentification par mot de passe (seules les clés SSH sont autorisées).
-
-Pour vous connecter à la machine B après le déploiement :
-`ssh -p 2222 user@10.0.0.2`
+6. **Ports**
+- Loki: 3100
+- Grafana: 3000
+- Syslog: 514
+- HAProxy: 8080
