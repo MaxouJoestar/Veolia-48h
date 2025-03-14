@@ -1,0 +1,61 @@
+server:
+  http_listen_port: 9080  # Port d'écoute de Promtail pour les métriques et la santé
+  grpc_listen_port: 0     # Désactive le port gRPC (non nécessaire ici)
+
+positions:
+  filename: /tmp/positions.yaml  # Fichier pour stocker la position des logs lus
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push  # URL de l'instance Loki
+
+scrape_configs:
+  # Configuration pour les logs Syslog
+  - job_name: syslog
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: syslog
+          __path__: /var/log/syslog.log  # Chemin du fichier de logs Syslog
+    syslog:
+      listen_address: 0.0.0.0:514  # Écoute sur le port 514 pour les logs Syslog
+      labels:
+        job: syslog
+        app: syslog_sender
+
+  # Configuration pour les logs JSON
+  - job_name: json_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: json_logs
+          __path__: /var/log/json/*.json  # Chemin des fichiers JSON
+    pipeline_stages:
+      - json:
+          expressions:
+            scriptExecutionCompte: scriptExecutionCompte
+            scriptExecutionEnAdministrateur: scriptExecutionEnAdministrateur
+            systemeNom: systemeNom
+            systemeSystemeExploitation: systemeSystemeExploitation
+            systemeSystemeExploitationVersion: systemeSystemeExploitationVersion
+            servicePortsOuvertsListe: servicePortsOuvertsListe
+      - labels:
+          scriptExecutionCompte: scriptExecutionCompte
+          systemeNom: systemeNom
+          systemeSystemeExploitation: systemeSystemeExploitation
+          systemeSystemeExploitationVersion: systemeSystemeExploitationVersion
+
+  # Configuration pour les logs du service de collecte (Rsyslog)
+  - job_name: rsyslog
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: rsyslog
+          __path__: /var/log/rsyslog/*.log  # Chemin des logs de Rsyslog
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\w+ \d+ \d+:\d+:\d+) (?P<hostname>\S+) (?P<message>.*)$'
+      - labels:
+          hostname: hostname
