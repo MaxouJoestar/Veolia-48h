@@ -1,74 +1,77 @@
+# Définition des réseaux Docker
 networks:
-  infra_net:
-    driver: bridge
-    ipam:
+  infra_net:  # Nom du réseau
+    driver: bridge  # Utilisation du driver bridge pour le réseau
+    ipam:  # Configuration IPAM (IP Address Management)
       config:
-        - subnet: "10.0.0.0/24"
-          gateway: "10.0.0.1"
+        - subnet: "10.0.0.0/24"  # Sous-réseau pour les conteneurs
+          gateway: "10.0.0.1"  # Passerelle par défaut pour le réseau
 
+# Définition des services Docker
 services:
-  ntp_service:
+  ntp_service:  # Service NTP pour la synchronisation du temps
     build:
-      context: ./ntp
-      dockerfile: Dockerfile
-    container_name: ntp_service
-    restart: always
+      context: ./ntp  # Dossier contenant le Dockerfile pour le service NTP
+      dockerfile: Dockerfile  # Fichier Dockerfile à utiliser
+    container_name: ntp_service  # Nom du conteneur
+    restart: always  # Redémarrage automatique en cas d'échec
     networks:
-      infra_net:
-        ipv4_address: "10.0.0.10"
+      infra_net:  # Réseau auquel le conteneur est connecté
+        ipv4_address: "10.0.0.10"  # Adresse IP statique pour ce conteneur
     ports:
-      - "123:123/udp"
+      - "123:123/udp"  # Exposition du port UDP 123 pour le service NTP
 
-  log_service:
+  log_service:  # Service de journalisation pour la collecte des logs
     build:
-      context: ./log_service
-      dockerfile: Dockerfile
-    container_name: log_service
-    restart: always
+      context: ./log_service  # Dossier contenant le Dockerfile pour le service de journalisation
+      dockerfile: Dockerfile  # Fichier Dockerfile à utiliser
+    container_name: log_service  # Nom du conteneur
+    restart: always  # Redémarrage automatique en cas d'échec
     networks:
-      infra_net:
-        ipv4_address: "10.0.0.20"
+      infra_net:  # Réseau auquel le conteneur est connecté
+        ipv4_address: "10.0.0.20"  # Adresse IP statique pour ce conteneur
     ports:
-      - "514:514/udp"
-      - "8514:8514"
+      - "514:514/udp"  # Exposition du port UDP 514 pour la collecte des logs
+      - "8514:8514"  # Exposition du port 8514 pour l'interface de visualisation des logs
 
-  compliance_agent:
+  compliance_agent:  # Agent de conformité pour la collecte des informations de conformité
     build:
-      context: ./compliance_agent
-      dockerfile: Dockerfile
-    container_name: compliance_agent
-    restart: always
+      context: ./compliance_agent  # Dossier contenant le Dockerfile pour l'agent de conformité
+      dockerfile: Dockerfile  # Fichier Dockerfile à utiliser
+    container_name: compliance_agent  # Nom du conteneur
+    restart: always  # Redémarrage automatique en cas d'échec
     networks:
-      infra_net:
-        ipv4_address: "10.0.0.30"
+      infra_net:  # Réseau auquel le conteneur est connecté
+        ipv4_address: "10.0.0.30"  # Adresse IP statique pour ce conteneur
 
-  proxy_service:
+  proxy_service:  # Service proxy pour le transit des flux réseau
     build:
-      context: ./proxy_service
-      dockerfile: Dockerfile
-    container_name: proxy_service
-    restart: always
+      context: ./proxy_service  # Dossier contenant le Dockerfile pour le service proxy
+      dockerfile: Dockerfile  # Fichier Dockerfile à utiliser
+    container_name: proxy_service  # Nom du conteneur
+    restart: always  # Redémarrage automatique en cas d'échec
     networks:
-      infra_net:
-        ipv4_address: "10.0.0.40"
+      infra_net:  # Réseau auquel le conteneur est connecté
+        ipv4_address: "10.0.0.40"  # Adresse IP statique pour ce conteneur
     ports:
-      - "8080:8080"
-      - "8530:8530"
-      - "53:53/udp"
+      - "8080:8080"  # Exposition du port 8080 pour le proxy HTTP/HTTPS
+      - "8530:8530"  # Exposition du port 8530 pour le relai WSUS
+      - "53:53/udp"  # Exposition du port UDP 53 pour le relai DNS
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    restart: always
+  grafana:  # Service Grafana pour la visualisation des données
+    image: grafana/grafana:latest  # Utilisation de l'image officielle Grafana
+    container_name: grafana  # Nom du conteneur
+    restart: always  # Redémarrage automatique en cas d'échec
     networks:
-      infra_net:
-        ipv4_address: "10.0.0.50"
+      infra_net:  # Réseau auquel le conteneur est connecté
+        ipv4_address: "10.0.0.50"  # Adresse IP statique pour ce conteneur
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Exposition du port 3000 pour l'interface web de Grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin  # Définition du mot de passe admin pour Grafana
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana  # Montage d'un volume pour persister les données de Grafana
 
+# Définition des volumes Docker
 volumes:
-  grafana_data:
+  grafana_data:  # Volume pour stocker les données de Grafana
