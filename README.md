@@ -1,7 +1,5 @@
 # VEOLIA-VCH
 
-# Veolia-48h Docker Setup
-
 Ce projet configure et déploie une infrastructure basée sur Docker pour surveiller et centraliser les logs à l'aide de **Loki**, **Promtail**, **Grafana**, et **HAProxy**. 
 
 ## Prérequis
