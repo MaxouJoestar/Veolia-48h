@@ -1,52 +1,44 @@
 #!/bin/bash
 
-# Demander l'adresse IP de la machine B
-read -p "Veuillez entrer l'adresse IP de la machine B (dans le réseau 10.0.0.0/24) : " MACHINE_B_IP
+# Demander le nom de la machine
+echo "Entrez le nom de la machine à attribuer :"
+read machine_name
 
-# Variables
-SSH_PORT="2222"          # Port SSH personnalisé
-SSH_USER="user"          # Utilisateur SSH sur la machine B
-REPO_DIR="votre-repository"  # Répertoire à déployer
+# Demander le département
+echo "Entrez le département :"
+read department
 
-# Étape 1: Vérifier que la machine B est accessible
-echo "Vérification de l'accès à la machine B ($MACHINE_B_IP)..."
-ping -c 1 $MACHINE_B_IP > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  echo "La machine B ($MACHINE_B_IP) n'est pas accessible. Vérifiez la connectivité réseau."
-  exit 1
-fi
+# Attribuer le nom à la machine
+echo "Le nom de la machine est : $machine_name"
 
-# Étape 2: Installer Docker et Docker Compose sur la machine B
-echo "Installation de Docker et Docker Compose sur la machine B..."
-ssh $SSH_USER@$MACHINE_B_IP << 'EOF'
-  sudo apt update
-  sudo apt install -y docker.io docker-compose
-  sudo usermod -aG docker $USER
-EOF
+# Ouvrir le port 22[numéro de département] pour SSH
+ssh_port="22$department"
+echo "Ouverture du port SSH $ssh_port pour le département $department..."
 
-# Étape 3: Copier le répertoire sur la machine B
-echo "Copie du répertoire $REPO_DIR sur la machine B..."
-scp -r ./$REPO_DIR $SSH_USER@$MACHINE_B_IP:/home/$SSH_USER/
+# Modifier le fichier de configuration du pare-feu pour ouvrir le port
+sudo ufw allow $ssh_port/tcp
+sudo ufw reload
 
-# Étape 4: Démarrer les conteneurs Docker
-echo "Démarrage des conteneurs Docker sur la machine B..."
-ssh $SSH_USER@$MACHINE_B_IP << 'EOF'
-  cd /home/$USER/$REPO_DIR
-  docker-compose up -d
-EOF
+# Configurer SSH pour ne permettre que la connexion avec clé
+echo "Configurer SSH pour ne permettre que la connexion avec une clé..."
 
-# Étape 5: Configurer SSH pour écouter sur un port spécifique et n'autoriser que les clés SSH
-echo "Configuration de SSH sur la machine B..."
-ssh $SSH_USER@$MACHINE_B_IP << 'EOF'
-  sudo sed -i 's/^#Port 22/Port 2222/' /etc/ssh/sshd_config
-  sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-  sudo systemctl restart ssh
-EOF
+# Assurez-vous que la clé publique de l'utilisateur est présente dans ~/.ssh/authorized_keys
+echo "Ajoutez votre clé publique SSH dans ~/.ssh/authorized_keys si ce n'est pas déjà fait."
 
-# Étape 6: Vérifier le déploiement
-echo "Vérification du déploiement..."
-ssh $SSH_USER@$MACHINE_B_IP "docker ps"
+# Modifier la configuration SSH pour désactiver l'authentification par mot de passe
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
 
-echo "Déploiement terminé avec succès !"
-echo "Vous pouvez maintenant vous connecter à la machine B via SSH sur le port $SSH_PORT :"
-echo "  ssh -p $SSH_PORT $SSH_USER@$MACHINE_B_IP"
+# Cloner le dépôt Git
+echo "Clonage du dépôt Veolia-48h depuis GitHub..."
+git clone https://github.com/MaxouJoestar/Veolia-48h.git
+
+# Se rendre dans le dossier Docker
+cd Veolia-48h/docker
+
+# Exécuter les commandes Docker
+echo "Construction et démarrage des conteneurs Docker..."
+docker-compose build
+docker-compose up -d
+
+echo "Le script a terminé l'exécution avec succès !"
