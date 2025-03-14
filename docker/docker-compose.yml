@@ -55,6 +55,12 @@ services:
       - "8080:8080"
       - "8530:8530"
       - "53:53/udp"
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+      - ./logs:/var/log/squid
+    cap_add:
+      - NET_ADMIN
+
 
   grafana:
     image: grafana/grafana:latest
