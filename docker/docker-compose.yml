@@ -1,24 +1,29 @@
+# Configuration du réseau privé pour les services
 networks:
   infra_net:
-    driver: bridge
+    driver: bridge  # Utilisation du driver bridge pour la communication entre conteneurs
     ipam:
       config:
-        - subnet: "10.0.0.0/24"
-          gateway: "10.0.0.1"
+        - subnet: "10.0.0.0/24"  # Plage d'adresses IP pour le réseau
+          gateway: "10.0.0.1"    # Passerelle par défaut
 
 services:
+  # Service NTP pour la synchronisation du temps
   ntp_service:
     build:
       context: ./ntp
       dockerfile: Dockerfile
     container_name: ntp_service
-    restart: always
+    restart: always  # Redémarrage automatique en cas de panne
     networks:
       infra_net:
-        ipv4_address: "10.0.0.10"
+        ipv4_address: "10.0.0.10"  # IP fixe pour le service NTP
     ports:
-      - "123:123/udp"
+      - "123:123/udp"  # Port standard NTP
+    deploy:
+      replicas: 2  # Redondance avec 2 réplicas pour la haute disponibilité
 
+  # Service de journalisation
   log_service:
     build:
       context: ./log_service
@@ -27,11 +32,14 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.20"
+        ipv4_address: "10.0.0.20"  # IP fixe pour le service de logs
     ports:
-      - "514:514/udp"
-      - "8514:8514"
+      - "514:514/udp"  # Port syslog standard
+      - "8514:8514"    # Port additionnel pour les logs
+    deploy:
+      replicas: 2  # Redondance pour la haute disponibilité
 
+  # Agent de conformité
   compliance_agent:
     build:
       context: ./compliance_agent
@@ -40,8 +48,9 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.30"
+        ipv4_address: "10.0.0.30"  # IP fixe pour l'agent de conformité
 
+  # Service proxy pour la gestion du trafic
   proxy_service:
     build:
       context: ./proxy_service
@@ -50,25 +59,59 @@ services:
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.40"
+        ipv4_address: "10.0.0.40"  # IP fixe pour le service proxy
     ports:
-      - "8080:8080"
-      - "8530:8530"
-      - "53:53/udp"
+      - "8080:8080"  # Port HTTP
+      - "8530:8530"  # Port pour les mises à jour
+      - "53:53/udp"  # Port DNS
+    deploy:
+      replicas: 2  # Redondance pour la haute disponibilité
 
+  # Service Loki pour le stockage et l'indexation des logs
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: "10.0.0.60"  # IP fixe pour Loki
+    ports:
+      - "3100:3100"  # Port API Loki
+    volumes:
+      - loki_data:/etc/loki  # Persistance des données Loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # Agent Promtail pour la collecte des logs
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: always
+    networks:
+      infra_net:
+        ipv4_address: "10.0.0.70"  # IP fixe pour Promtail
+    volumes:
+      - /var/log:/var/log  # Accès aux logs du système hôte
+      - ./promtail-config.yaml:/etc/promtail/config.yml  # Configuration de Promtail
+    command: -config.file=/etc/promtail/config.yml
+
+  # Interface Grafana pour la visualisation
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     restart: always
     networks:
       infra_net:
-        ipv4_address: "10.0.0.50"
+        ipv4_address: "10.0.0.50"  # IP fixe pour Grafana
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Port interface web Grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin  # Mot de passe admin par défaut
+      GF_INSTALL_PLUGINS: grafana-loki-datasource  # Installation du plugin Loki
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana  # Persistance des données Grafana
+      - ./datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml  # Configuration des sources de données
 
+# Définition des volumes pour la persistance des données
 volumes:
-  grafana_data:
+  grafana_data:  # Volume pour les données Grafana
+  loki_data:     # Volume pour les données Loki
